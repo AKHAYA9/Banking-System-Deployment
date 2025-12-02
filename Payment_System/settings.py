@@ -26,11 +26,8 @@ SECRET_KEY = 'django-insecure-xqi)n5t=%%1(@eyuh%)pq@oz+1gbf2_5gumeb%1bvn-h73s#ez
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'banking-system-deployment.onrender.com',
-    'localhost',
-    '127.0.0.1'
-]
+ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
