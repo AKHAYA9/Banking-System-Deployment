@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h3 class="text-warning">⚠ Confirm Delete</h3>
+
+    <p class="text-light">
+        Are you sure you want to delete this transaction?<br>
+        <strong>{{ tx.date }} — {{ tx.time_slot }} | ₹{{ tx.total_win }}</strong>
+    </p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
