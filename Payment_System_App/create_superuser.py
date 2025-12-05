@@ -12,7 +12,7 @@ User = get_user_model()
 username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
 email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
 password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
-loginid = os.environ.get("DJANGO_SUPERUSER_LOGINID")  # Add this
+loginid = os.environ.get("DJANGO_SUPERUSER_LOGINID")  # MUST match your model
 
 if username and email and password and loginid:
     if not User.objects.filter(username=username).exists():
