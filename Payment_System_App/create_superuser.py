@@ -9,21 +9,35 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+# Load superuser info from environment variables
 username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
 email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
 password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
-loginid = os.environ.get("DJANGO_SUPERUSER_LOGINID")  # MUST match your model
+loginid = os.environ.get("DJANGO_SUPERUSER_LOGINID")  # Must match your model
 
-if username and email and password and loginid:
-    if not User.objects.filter(username=username).exists():
+def create_superuser():
+    if not all([username, email, password, loginid]):
+        print("❌ Missing environment variables for superuser creation.")
+        return
+
+    try:
+        user = User.objects.get(username=username)
+        if user.is_superuser:
+            print(f"✅ Superuser '{username}' already exists.")
+        else:
+            print(f"⚠ User '{username}' exists but is not a superuser. Updating...")
+            user.is_superuser = True
+            user.is_staff = True
+            user.save()
+            print(f"✅ User '{username}' promoted to superuser.")
+    except User.DoesNotExist:
         User.objects.create_superuser(
             username=username,
             email=email,
             password=password,
-            loginid=loginid  # Pass the required field
+            loginid=loginid  # Required field
         )
-        print("Superuser created")
-    else:
-        print("Superuser already exists")
-else:
-    print("Missing environment variables for superuser")
+        print(f"✅ Superuser '{username}' created successfully.")
+
+if __name__ == "__main__":
+    create_superuser()
