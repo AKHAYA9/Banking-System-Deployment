@@ -1,0 +1,555 @@
+{% extends "admin/home.html" %}
+
+{% block title %}Admin Dashboard - SecureBank{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- Statistics Overview -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_players }}</h3>
+                <p>Active Players</p>
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-content">
+                <h3>₹{{ total_balance|floatformat:2 }}</h3>
+                <p>Total Balance</p>
+            </div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-icon">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_transactions }}</h3>
+                <p>Total Transactions</p>
+            </div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-icon">
+                <i class="fas fa-gamepad"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ active_games }}</h3>
+                <p>Active Games Today</p>
+            </div>
+        </div>
+
+        {% if pending_users > 0 %}
+        <div class="stat-card danger">
+            <div class="stat-icon">
+                <i class="fas fa-user-clock"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ pending_users }}</h3>
+                <p>Pending Approvals</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-bar">
+        <a href="{% url 'add_player' %}" class="btn-action primary">
+            <i class="fas fa-user-plus"></i> Add Player
+        </a>
+        <a href="{% url 'add_transaction' %}" class="btn-action success">
+            <i class="fas fa-plus-circle"></i> Add Transaction
+        </a>
+        <a href="{% url 'manage_users' %}" class="btn-action info">
+            <i class="fas fa-users-cog"></i> Manage Users
+        </a>
+        <a href="{% url 'match_results' %}" class="btn-action warning">
+            <i class="fas fa-trophy"></i> Match Results
+        </a>
+    </div>
+
+    <!-- ALL USERS TABLE (NEW!) -->
+    <div class="data-card">
+        <div class="card-header">
+            <div class="header-content">
+                <i class="fas fa-users"></i>
+                <div>
+                    <h2>All Registered Users</h2>
+                    <p>Complete list of users and their player accounts</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <input type="text" id="userSearch" class="search-input" placeholder="Search users..." onkeyup="searchUsers()">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th><i class="fas fa-user"></i> Username</th>
+                        <th><i class="fas fa-id-card"></i> Login ID</th>
+                        <th><i class="fas fa-envelope"></i> Email</th>
+                        <th><i class="fas fa-phone"></i> Mobile</th>
+                        <th><i class="fas fa-wallet"></i> Wallet Balance</th>
+                        <th><i class="fas fa-check-circle"></i> Status</th>
+                        <th><i class="fas fa-gamepad"></i> Player Account</th>
+                        <th><i class="fas fa-cog"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in all_users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="user-cell">
+                                <i class="fas fa-user-circle"></i>
+                                <strong>{{ user.username }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ user.loginid }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.mobile|default:"—" }}</td>
+                        <td>
+                            {% if user.player %}
+                                <span class="balance {% if user.player.balance > 0 %}positive{% elif user.player.balance < 0 %}negative{% else %}neutral{% endif %}">
+                                    ₹{{ user.player.balance|floatformat:2 }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">No Player Account</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="status-badge active">
+                                    <i class="fas fa-check-circle"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="status-badge inactive">
+                                    <i class="fas fa-times-circle"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.player %}
+                                <span class="status-badge success">
+                                    <i class="fas fa-check"></i> {{ user.player.name }}
+                                </span>
+                            {% else %}
+                                <span class="status-badge warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Not Created
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                {% if user.player %}
+                                    <a href="{% url 'update_player' user.player.id %}" class="btn-icon primary" title="Update Balance">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'reset_player_balance' user.player.id %}" class="btn-icon warning" title="Reset Balance" onclick="return confirm('Reset balance to ₹0?');">
+                                        <i class="fas fa-undo"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'add_player' %}" class="btn-icon success" title="Create Player Account">
+                                        <i class="fas fa-user-plus"></i>
+                                    </a>
+                                {% endif %}
+                                
+                                {% if user.is_active %}
+                                    <a href="{% url 'deactivate_user' user.id %}" class="btn-icon danger" title="Deactivate User" onclick="return confirm('Deactivate this user?');">
+                                        <i class="fas fa-user-slash"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'activate_user' user.id %}" class="btn-icon success" title="Activate User" onclick="return confirm('Activate this user?');">
+                                        <i class="fas fa-user-check"></i>
+                                    </a>
+                                {% endif %}
+                                
+                                <a href="{% url 'delete_user' user.id %}" class="btn-icon danger" title="Delete User" onclick="return confirm('Delete this user permanently? This cannot be undone!');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">
+                            <i class="fas fa-inbox"></i> No users registered yet
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PLAYERS TABLE (Existing) -->
+    <div class="data-card">
+        <div class="card-header">
+            <div class="header-content">
+                <i class="fas fa-gamepad"></i>
+                <div>
+                    <h2>Active Players</h2>
+                    <p>Players with active game accounts</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th><i class="fas fa-user"></i> Player Name</th>
+                        <th><i class="fas fa-id-card"></i> Linked User</th>
+                        <th><i class="fas fa-wallet"></i> Balance</th>
+                        <th><i class="fas fa-cog"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="user-cell">
+                                <i class="fas fa-user-circle"></i>
+                                <strong>{{ player.name }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            {% if player.user %}
+                                <span class="text-success">
+                                    <i class="fas fa-link"></i> {{ player.user.username }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">
+                                    <i class="fas fa-unlink"></i> No User Linked
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="balance {% if player.balance > 0 %}positive{% elif player.balance < 0 %}negative{% else %}neutral{% endif %}">
+                                ₹{{ player.balance|floatformat:2 }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'update_player' player.id %}" class="btn-icon primary" title="Update">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'reset_player_balance' player.id %}" class="btn-icon warning" title="Reset Balance" onclick="return confirm('Reset balance to ₹0?');">
+                                    <i class="fas fa-undo"></i>
+                                </a>
+                                <a href="{% url 'delete_player' player.id %}" class="btn-icon danger" title="Delete" onclick="return confirm('Delete this player?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            <i class="fas fa-inbox"></i> No players found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RECENT TRANSACTIONS -->
+    <div class="data-card">
+        <div class="card-header">
+            <div class="header-content">
+                <i class="fas fa-history"></i>
+                <div>
+                    <h2>Recent Transactions</h2>
+                    <p>Last 10 transactions</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'add_transaction' %}" class="btn-small primary">
+                    <i class="fas fa-plus"></i> New Transaction
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th><i class="fas fa-calendar"></i> Date</th>
+                        <th><i class="fas fa-clock"></i> Time Slot</th>
+                        <th><i class="fas fa-users"></i> Players</th>
+                        <th><i class="fas fa-exchange-alt"></i> Operation</th>
+                        <th><i class="fas fa-rupee-sign"></i> Entry Fee</th>
+                        <th><i class="fas fa-trophy"></i> Total Win</th>
+                        <th><i class="fas fa-medal"></i> Position</th>
+                        <th><i class="fas fa-cog"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in recent_transactions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ tx.date|date:"d M Y" }}</td>
+                        <td><span class="badge">{{ tx.time_slot }}</span></td>
+                        <td>
+                            <div class="player-list">
+                                {% for player in tx.players.all %}
+                                    <span class="player-tag">{{ player.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if tx.operation == '+' %}
+                                <span class="operation-badge add">
+                                    <i class="fas fa-plus"></i> Add
+                                </span>
+                            {% else %}
+                                <span class="operation-badge subtract">
+                                    <i class="fas fa-minus"></i> Subtract
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>₹{{ tx.entry_fee|floatformat:2 }}</td>
+                        <td class="text-success">₹{{ tx.total_win|floatformat:2 }}</td>
+                        <td>{{ tx.position|default:"—" }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'delete_transaction' tx.id %}" class="btn-icon danger" title="Delete" onclick="return confirm('Delete this transaction?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">
+                            <i class="fas fa-inbox"></i> No transactions yet
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="danger-zone">
+        <div class="danger-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Danger Zone</h3>
+        </div>
+        <div class="danger-actions">
+            <a href="{% url 'reset_transactions' %}" class="btn-danger" onclick="return confirm('Reset all transactions? This cannot be undone!');">
+                <i class="fas fa-eraser"></i> Reset All Transactions
+            </a>
+            <a href="{% url 'reset_all' %}" class="btn-danger" onclick="return confirm('Reset everything? All transactions and balances will be cleared!');">
+                <i class="fas fa-trash-restore"></i> Reset Everything
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<style>
+/* Search Input */
+.search-input {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 250px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4A90E2;
+}
+
+/* User Cell */
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-cell i {
+    color: #4A90E2;
+    font-size: 1.2em;
+}
+
+/* Balance Display */
+.balance {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.balance.positive {
+    background: #d4edda;
+    color: #155724;
+}
+
+.balance.negative {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.balance.neutral {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-badge.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-badge.success {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.btn-icon {
+    padding: 6px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon.primary {
+    background: #4A90E2;
+    color: white;
+}
+
+.btn-icon.success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-icon.warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-icon.danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-icon:hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
+}
+
+/* Player Tags */
+.player-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.player-tag {
+    background: #e9ecef;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Operation Badges */
+.operation-badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.operation-badge.add {
+    background: #d4edda;
+    color: #155724;
+}
+
+.operation-badge.subtract {
+    background: #f8d7da;
+    color: #721c24;
+}
+</style>
+
+<script>
+// Search Users Function
+function searchUsers() {
+    const input = document.getElementById('userSearch');
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById('usersTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+        
+        for (let j = 0; j < cells.length; j++) {
+            const cell = cells[j];
+            if (cell) {
+                const textValue = cell.textContent || cell.innerText;
+                if (textValue.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        rows[i].style.display = found ? '' : 'none';
+    }
+}
+</script>
+{% endblock %}

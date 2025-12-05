@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SecureBank{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style_home.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navbar Include -->
+    {% include 'includes/navbar.html' %}
+
+    <!-- Messages Include -->
+    {% include 'includes/messages.html' %}
+
+    <!-- Page Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer Include -->
+    {% include 'includes/footer.html' %}
+
+    <script src="{% static 'js/script_home.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Services - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="section-header">
+    <h2 class="section-title">Services</h2>
+    <p class="section-subtitle">What the app offers</p>
+  </div>
+
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-image">
+        <div class="service-icon">🧾</div>
+      </div>
+      <div class="service-content">
+        <h3>Transaction Management</h3>
+        <p>Create match transactions and split outcomes across players. Automatic balance adjustments.</p>
+        <a class="service-link" href="{% url 'UserLogin' %}">Manage Transactions →</a>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-image">
+        <div class="service-icon">🔐</div>
+      </div>
+      <div class="service-content">
+        <h3>Admin Controls</h3>
+        <p>Approve user registrations, add players, reset matches and player balances securely.</p>
+        <a class="service-link" href="{% url 'UserLogin' %}">Admin Login →</a>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-image">
+        <div class="service-icon">📸</div>
+      </div>
+      <div class="service-content">
+        <h3>Match Results</h3>
+        <p>Upload screenshots and descriptions to keep visual evidence of match outcomes.</p>
+        <a class="service-link" href="{% url 'match_results' %}">View Results →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

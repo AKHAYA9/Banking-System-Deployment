@@ -1,0 +1,167 @@
+{% extends "user/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}User Dashboard - SecureBank{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/user_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <div class="welcome-content">
+            <h2>👋 Welcome back, {{ request.user.username }}! this page is under maintainance and every Sunday it may not work for 2-4 hour</h2>
+
+            <p>Here's your account overview and recent activity</p>
+        </div>
+        <div class="welcome-actions">
+            <a href="{% url 'profile_edit' %}" class="btn-secondary">
+                <i class="fas fa-edit"></i> Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+
+        <div class="stat-card gradient-blue">
+            <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+            <div class="stat-info">
+                <p>Current Balance</p>
+                <h3>₹{{ request.user.player.balance|default:"0.00"|floatformat:2 }}</h3>
+            </div>
+            <div class="stat-badge"><i class="fas fa-arrow-up"></i></div>
+        </div>
+
+        <div class="stat-card gradient-green">
+            <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
+            <div class="stat-info">
+                <p>Total Transactions</p>
+                <h3>{{ request.user.transactions.count|default:"0" }}</h3>
+            </div>
+            <div class="stat-badge"><i class="fas fa-chart-line"></i></div>
+        </div>
+
+        <div class="stat-card gradient-orange">
+            <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+            <div class="stat-info">
+                <p>Total Wins</p>
+                <h3>{{ total_wins|default:"0" }}</h3>
+            </div>
+            <div class="stat-badge"><i class="fas fa-medal"></i></div>
+        </div>
+
+        <div class="stat-card gradient-purple">
+            <div class="stat-icon"><i class="fas fa-gamepad"></i></div>
+            <div class="stat-info">
+                <p>Games Played</p>
+                <h3>{{ games_played|default:"0" }}</h3>
+            </div>
+            <div class="stat-badge"><i class="fas fa-play"></i></div>
+        </div>
+
+    </div>
+
+    <!-- Profile Section -->
+    <div class="profile-section">
+        <div class="data-card profile-card">
+            <div class="card-header">
+                <h3><i class="fas fa-user"></i> Profile Information</h3>
+                <span class="status-badge active">Active</span>
+            </div>
+
+            <div class="card-body">
+                <div class="profile-grid">
+
+                    <div class="profile-item">
+                        <i class="fas fa-user-tag"></i>
+                        <div>
+                            <label>Username</label>
+                            <p>{{ request.user.username }}</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <label>Email</label>
+                            <p>{{ request.user.email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <label>Mobile</label>
+                            <p>{{ request.user.mobile|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-item">
+                        <i class="fas fa-id-card"></i>
+                        <div>
+                            <label>Login ID</label>
+                            <p>{{ request.user.loginid|default:request.user.username }}</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="data-card">
+        <div class="card-header">
+            <h3><i class="fas fa-history"></i> Recent Transaction History</h3>
+            <a href="#" class="btn-add">View All</a>
+        </div>
+
+        <div class="card-body">
+
+            {% if request.user.transactions.exists %}
+            <div class="transaction-list">
+
+                {% for tx in request.user.transactions.all|dictsortreversed:"date"|slice:":5" %}
+                <div class="transaction-item">
+
+                    <div class="transaction-icon {% if tx.operation == '+' %}success{% else %}danger{% endif %}">
+                        <i class="fas fa-{% if tx.operation == '+' %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                    </div>
+
+                    <div class="transaction-details">
+                        <h4>{{ tx.position|default:"Transaction" }}</h4>
+                        <p>
+                            <i class="far fa-calendar"></i> {{ tx.date|date:"d M Y" }}
+                            &nbsp;•&nbsp;
+                            <i class="far fa-clock"></i> {{ tx.time_slot }}
+                        </p>
+                    </div>
+
+                    <div class="transaction-amount {% if tx.operation == '+' %}positive{% else %}negative{% endif %}">
+                        <h4>{{ tx.operation }}₹{{ tx.total_win|floatformat:2 }}</h4>
+                        <p class="small">Entry: ₹{{ tx.entry_fee|floatformat:2 }}</p>
+                    </div>
+
+                </div>
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-receipt"></i>
+                <p>No transactions yet. Start playing to see your history!</p>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

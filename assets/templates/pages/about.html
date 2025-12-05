@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}About - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="section-header">
+    <h2 class="section-title">About SecureBank Money Split</h2>
+    <p class="section-subtitle">A lightweight admin-driven money split system tailored for small gaming groups and clubs.</p>
+  </div>
+
+  <div class="about-content">
+    <div class="about-text">
+      <h3>What we do</h3>
+      <p>We help organizers log match results, distribute winnings across players, and keep a transparent ledger of transactions.</p>
+
+      <div class="about-features">
+        <div class="about-feature">
+          <div class="checkmark">✓</div>
+          <div>
+            <strong>Admin controls</strong>
+            <p class="small text-muted">Approve registrations, manage players, and reset data when needed.</p>
+          </div>
+        </div>
+
+        <div class="about-feature">
+          <div class="checkmark">✓</div>
+          <div>
+            <strong>Player balance tracking</strong>
+            <p class="small text-muted">Balances update automatically based on transaction rules you configure.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-image">
+      <div class="image-placeholder">
+        <!-- optional illustration or image -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

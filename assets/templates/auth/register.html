@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - SecureBank{% endblock %}
+
+{% block content %}
+<section class="register-section">
+    <div class="card">
+        <h2 class="text-success">📝 Sign Up</h2>
+        <p class="text-secondary">Create your SecureBank account</p>
+
+        <form method="POST" action="{% url 'UserRegisterActions' %}">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="username" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Enter your name" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="loginid" class="form-label">Login ID</label>
+                <input type="text" class="form-control" id="loginid" name="loginid" placeholder="Choose a Login ID" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="mobile" class="form-label">Mobile Number</label>
+                <input type="tel" class="form-control" id="mobile" name="mobile" placeholder="Enter your mobile number" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm password" required>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-success">✅ Register</button>
+            </div>
+
+            <p class="small">
+                Already have an account? <a href="{% url 'UserLogin' %}">Login</a>
+            </p>
+        </form>
+    </div>
+</section>
+{% endblock %}

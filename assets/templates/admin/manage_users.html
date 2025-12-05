@@ -1,0 +1,307 @@
+{% extends "admin/home.html" %}
+
+{% block title %}Manage Users - SecureBank{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block page_description %}Approve, activate, and manage user accounts{% endblock %}
+
+{% block content %}
+
+<!-- Pending Approvals -->
+{% if pending_users %}
+<div class="data-card">
+    <div class="card-header" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+        <div class="header-content">
+            <i class="fas fa-user-clock"></i>
+            <div>
+                <h2>Pending Approvals</h2>
+                <p>{{ pending_users.count }} user(s) waiting for approval</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th><i class="fas fa-user"></i> Username</th>
+                    <th><i class="fas fa-id-card"></i> Login ID</th>
+                    <th><i class="fas fa-envelope"></i> Email</th>
+                    <th><i class="fas fa-phone"></i> Mobile</th>
+                    <th><i class="fas fa-calendar"></i> Registered</th>
+                    <th><i class="fas fa-cog"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in pending_users %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <div class="user-cell">
+                            <i class="fas fa-user-circle"></i>
+                            <strong>{{ user.username }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ user.loginid }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.mobile|default:"—" }}</td>
+                    <td>{{ user.date_joined|date:"d M Y" }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'activate_user' user.id %}" class="btn-icon success" title="Approve & Activate" onclick="return confirm('Approve this user?');">
+                                <i class="fas fa-check"></i>
+                            </a>
+                            <a href="{% url 'delete_user' user.id %}" class="btn-icon danger" title="Reject & Delete" onclick="return confirm('Reject and delete this user?');">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Active Users -->
+<div class="data-card">
+    <div class="card-header">
+        <div class="header-content">
+            <i class="fas fa-users"></i>
+            <div>
+                <h2>Active Users</h2>
+                <p>{{ active_users.count }} active user(s)</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <input type="text" id="userSearch" class="search-input" placeholder="Search users..." onkeyup="searchUsers()">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="usersTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th><i class="fas fa-user"></i> Username</th>
+                    <th><i class="fas fa-id-card"></i> Login ID</th>
+                    <th><i class="fas fa-envelope"></i> Email</th>
+                    <th><i class="fas fa-phone"></i> Mobile</th>
+                    <th><i class="fas fa-wallet"></i> Balance</th>
+                    <th><i class="fas fa-gamepad"></i> Player Account</th>
+                    <th><i class="fas fa-cog"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in active_users %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <div class="user-cell">
+                            <i class="fas fa-user-circle"></i>
+                            <strong>{{ user.username }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ user.loginid }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.mobile|default:"—" }}</td>
+                    <td>
+                        {% if user.player %}
+                            <span class="balance {% if user.player.balance > 0 %}positive{% elif user.player.balance < 0 %}negative{% else %}neutral{% endif %}">
+                                ₹{{ user.player.balance|floatformat:2 }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">No Account</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.player %}
+                            <span class="status-badge success">
+                                <i class="fas fa-check"></i> {{ user.player.name }}
+                            </span>
+                        {% else %}
+                            <span class="status-badge warning">
+                                <i class="fas fa-exclamation-triangle"></i> Not Created
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if user.player %}
+                                <a href="{% url 'update_player' user.player.id %}" class="btn-icon primary" title="Update Balance">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            {% else %}
+                                <a href="{% url 'add_player' %}" class="btn-icon success" title="Create Player">
+                                    <i class="fas fa-user-plus"></i>
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'deactivate_user' user.id %}" class="btn-icon warning" title="Deactivate" onclick="return confirm('Deactivate this user?');">
+                                <i class="fas fa-user-slash"></i>
+                            </a>
+                            
+                            <a href="{% url 'delete_user' user.id %}" class="btn-icon danger" title="Delete" onclick="return confirm('Delete this user permanently?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        <i class="fas fa-inbox"></i> No active users found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.search-input {
+    padding: 8px 15px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 5px;
+    font-size: 14px;
+    width: 250px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.search-input::placeholder {
+    color: rgba(255,255,255,0.8);
+}
+
+.search-input:focus {
+    outline: none;
+    background: white;
+    color: #333;
+    border-color: white;
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-cell i {
+    color: #4A90E2;
+    font-size: 1.2em;
+}
+
+.balance {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.balance.positive {
+    background: #d4edda;
+    color: #155724;
+}
+
+.balance.negative {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.balance.neutral {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-badge.success {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.btn-icon {
+    padding: 6px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon.primary {
+    background: #4A90E2;
+    color: white;
+}
+
+.btn-icon.success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-icon.warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-icon.danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-icon:hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
+}
+</style>
+
+<script>
+function searchUsers() {
+    const input = document.getElementById('userSearch');
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById('usersTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+        
+        for (let j = 0; j < cells.length; j++) {
+            const cell = cells[j];
+            if (cell) {
+                const textValue = cell.textContent || cell.innerText;
+                if (textValue.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        rows[i].style.display = found ? '' : 'none';
+    }
+}
+</script>
+
+{% endblock %}

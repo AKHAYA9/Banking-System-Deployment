@@ -1,0 +1,543 @@
+{% extends "admin/home.html" %}
+
+{% block title %}Match Results - SecureBank{% endblock %}
+{% block page_title %}Match Results{% endblock %}
+{% block page_description %}Upload and manage game result screenshots{% endblock %}
+
+{% block content %}
+
+<!-- Upload New Result -->
+<div class="data-card">
+    <div class="card-header" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+        <div class="header-content">
+            <i class="fas fa-upload"></i>
+            <div>
+                <h2>Upload Match Result</h2>
+                <p>Add new game result screenshot</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding: 30px;">
+        <form method="POST" enctype="multipart/form-data" class="form-container">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">
+                        <i class="fas fa-calendar"></i> Match Date *
+                    </label>
+                    <input type="date" name="date" id="date" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="time_slot">
+                        <i class="fas fa-clock"></i> Time Slot *
+                    </label>
+                    <select name="time_slot" id="time_slot" class="form-control" required>
+                        <option value="">-- Select Time --</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="4:00 PM">4:00 PM</option>
+                        <option value="6:00 PM">6:00 PM</option>
+                        <option value="8:00 PM">8:00 PM</option>
+                        <option value="10:00 PM">10:00 PM</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">
+                    <i class="fas fa-info-circle"></i> Description
+                </label>
+                <textarea name="description" id="description" class="form-control" rows="3" placeholder="Optional notes about this match..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="screenshot">
+                    <i class="fas fa-image"></i> Result Screenshot *
+                </label>
+                <div class="file-upload-area" id="fileUploadArea">
+                    <input type="file" name="screenshot" id="screenshot" accept="image/*" required>
+                    <div class="upload-placeholder">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload or drag and drop</p>
+                        <small>PNG, JPG, JPEG (Max 5MB)</small>
+                    </div>
+                    <div class="upload-preview" id="uploadPreview" style="display: none;">
+                        <img id="previewImage" src="" alt="Preview">
+                        <button type="button" class="remove-preview" onclick="removePreview()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-upload"></i> Upload Result
+                </button>
+                <button type="reset" class="btn-cancel" onclick="removePreview()">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Existing Results -->
+<div class="data-card">
+    <div class="card-header">
+        <div class="header-content">
+            <i class="fas fa-images"></i>
+            <div>
+                <h2>Uploaded Results</h2>
+                <p>{{ results.count }} result(s) uploaded</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-grid">
+        {% for result in results %}
+        <div class="result-card">
+            <div class="result-image">
+                <img src="{{ result.screenshot.url }}" alt="Match Result" onclick="openImageModal('{{ result.screenshot.url }}')">
+                <div class="result-overlay">
+                    <button class="btn-view" onclick="openImageModal('{{ result.screenshot.url }}')">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="result-info">
+                <div class="result-header">
+                    <span class="result-date">
+                        <i class="fas fa-calendar"></i> {{ result.date|date:"d M Y" }}
+                    </span>
+                    <span class="result-time">
+                        <i class="fas fa-clock"></i> {{ result.time_slot }}
+                    </span>
+                </div>
+                {% if result.description %}
+                <p class="result-description">{{ result.description }}</p>
+                {% endif %}
+                <div class="result-actions">
+                    <a href="{{ result.screenshot.url }}" download class="btn-icon primary" title="Download">
+                        <i class="fas fa-download"></i>
+                    </a>
+                    <a href="{% url 'delete_match_result' result.id %}" class="btn-icon danger" title="Delete" onclick="return confirm('Delete this result?');">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No Results Uploaded</h3>
+            <p>Upload your first match result using the form above</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="image-modal" id="imageModal" onclick="closeImageModal()">
+    <span class="modal-close">&times;</span>
+    <img class="modal-content" id="modalImage">
+</div>
+
+<style>
+.form-container {
+    max-width: 800px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group label i {
+    color: #f5576c;
+    margin-right: 5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #f5576c;
+    box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+}
+
+textarea.form-control {
+    resize: vertical;
+    font-family: inherit;
+}
+
+.file-upload-area {
+    position: relative;
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.file-upload-area:hover {
+    border-color: #f5576c;
+    background: #fff5f7;
+}
+
+.file-upload-area input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.upload-placeholder i {
+    font-size: 48px;
+    color: #f5576c;
+    margin-bottom: 15px;
+}
+
+.upload-placeholder p {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.upload-placeholder small {
+    color: #999;
+}
+
+.upload-preview {
+    position: relative;
+}
+
+.upload-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.remove-preview {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.remove-preview:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+}
+
+.btn-cancel {
+    background: #e0e0e0;
+    color: #666;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+    background: #d0d0d0;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 30px;
+}
+
+.result-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.result-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.result-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.result-image:hover img {
+    transform: scale(1.1);
+}
+
+.result-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s;
+}
+
+.result-image:hover .result-overlay {
+    opacity: 1;
+}
+
+.btn-view {
+    background: white;
+    color: #333;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-view:hover {
+    transform: scale(1.1);
+}
+
+.result-info {
+    padding: 20px;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.result-date, .result-time {
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.result-description {
+    color: #999;
+    font-size: 13px;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.result-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-icon {
+    flex: 1;
+    padding: 8px;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s;
+    font-size: 14px;
+}
+
+.btn-icon.primary {
+    background: #4A90E2;
+    color: white;
+}
+
+.btn-icon.danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-icon:hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #999;
+}
+
+/* Image Modal */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #bbb;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Set today's date
+document.getElementById('date').valueAsDate = new Date();
+
+// File preview
+document.getElementById('screenshot').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+            document.querySelector('.upload-placeholder').style.display = 'none';
+            document.getElementById('uploadPreview').style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+function removePreview() {
+    document.getElementById('screenshot').value = '';
+    document.querySelector('.upload-placeholder').style.display = 'block';
+    document.getElementById('uploadPreview').style.display = 'none';
+}
+
+function openImageModal(imageSrc) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = 'block';
+    modalImg.src = imageSrc;
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').style.display = 'none';
+}
+</script>
+
+{% endblock %}

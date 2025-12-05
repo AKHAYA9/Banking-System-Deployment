@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - SecureBank{% endblock %}
+
+{% block content %}
+<section class="error-page" style="text-align:center; padding:5rem 1rem;">
+    <h1 style="font-size:6rem; color:#f5576c;">404</h1>
+    <h2>Oops! Page Not Found</h2>
+    <p>The page you are looking for does not exist or has been moved.</p>
+    <a href="{% url 'index' %}" class="btn btn-primary mt-3">Go Back Home</a>
+</section>
+{% endblock %}

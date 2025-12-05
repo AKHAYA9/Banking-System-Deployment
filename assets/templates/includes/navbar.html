@@ -1,0 +1,28 @@
+{% load static %}
+
+<nav class="navbar">
+  <div class="nav-container">
+
+    <!-- Logo -->
+    <a href="{% url 'index' %}" class="logo">
+      SecureBank
+    </a>
+
+    <!-- Menu -->
+    <ul class="nav-menu" id="nav-menu">
+      <li><a href="{% url 'UserLogin' %}">Login</a></li>
+      <li><a href="{% url 'UserRegister' %}">Sign Up</a></li>
+      <li><a href="{% url 'service' %}" class="smooth-scroll">Services</a></li>
+      <li><a href="{% url 'about' %}" class="smooth-scroll">About</a></li>
+      <li><a href="{% url 'contact' %}" class="smooth-scroll">Contact</a></li>
+    </ul>
+
+    <!-- Hamburger (Mobile) -->
+    <div class="hamburger" id="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+  </div>
+</nav>

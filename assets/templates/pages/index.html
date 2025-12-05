@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home - SecureBank{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1>Welcome to SecureBank</h1>
+        <p class="lead">Your trusted partner in digital banking solutions.</p>
+        <a href="{% url 'UserRegister' %}" class="btn btn-success btn-lg">Get Started</a>
+        <a href="{% url 'UserLogin' %}" class="btn btn-primary btn-lg">Login</a>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section class="services-section">
+    <div class="container">
+        <h2>Our Services</h2>
+        <div class="row">
+            <div class="service-card">
+                <i class="service-icon">💼</i>
+                <h4>Secure Transactions</h4>
+                <p>Fast and secure banking transactions with real-time tracking.</p>
+            </div>
+            <div class="service-card">
+                <i class="service-icon">👥</i>
+                <h4>Customer Support</h4>
+                <p>24/7 dedicated support to assist all your banking needs.</p>
+            </div>
+            <div class="service-card">
+                <i class="service-icon">🔒</i>
+                <h4>Data Security</h4>
+                <p>We prioritize your data privacy with top-level security measures.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section">
+    <div class="container">
+        <h2>About SecureBank</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <p>SecureBank is a modern banking platform that ensures secure, fast, and convenient access to your financial data. We provide users with an intuitive interface and reliable service, empowering them to manage their finances anytime, anywhere.</p>
+                <p>Our mission is to make digital banking safe, accessible, and seamless for everyone.</p>
+            </div>
+            <div class="col-md-6">
+                <img src="{% static 'img/image.png' %}" alt="Banking Illustration">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="cta-section">
+    <div class="container">
+        <h3>Ready to experience SecureBank?</h3>
+        <a href="{% url 'UserRegister' %}" class="btn btn-light btn-lg">Sign Up Now</a>
+        <a href="{% url 'UserLogin' %}" class="btn btn-light btn-lg">Login</a>
+    </div>
+</section>
+{% endblock %}

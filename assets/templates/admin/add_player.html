@@ -1,0 +1,564 @@
+{% extends "admin/home.html" %}
+
+{% block title %}Add Player - SecureBank{% endblock %}
+{% block page_title %}Add New Player{% endblock %}
+{% block page_description %}Create a player account for a registered user{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <div class="header-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+                <h2>Create Player Account</h2>
+                <p>Link a player account to an existing user</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'add_player' %}" class="player-form">
+            {% csrf_token %}
+
+            <!-- Info Alert -->
+            <div class="info-alert">
+                <div class="alert-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="alert-content">
+                    <strong>What is a Player Account?</strong>
+                    <p>A player account links a registered user to the gaming system and enables them to participate in matches and manage their wallet balance.</p>
+                </div>
+            </div>
+
+            <!-- User Selection -->
+            <div class="form-group">
+                <label for="user_id">
+                    <i class="fas fa-user"></i> Select User
+                    <span class="required">*</span>
+                </label>
+                <select class="form-control" id="user_id" name="user_id" required onchange="updatePlayerName()">
+                    <option value="">-- Select a User --</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}">
+                        {{ user.username }} ({{ user.email }})
+                    </option>
+                    {% empty %}
+                    <option value="" disabled>No users available without player accounts</option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">Only users without existing player accounts are shown</small>
+            </div>
+
+            <!-- Selected User Preview -->
+            <div class="user-preview" id="userPreview" style="display: none;">
+                <div class="preview-card">
+                    <div class="preview-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="preview-details">
+                        <div class="preview-row">
+                            <span class="preview-label">Username:</span>
+                            <strong id="previewUsername"></strong>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">Email:</span>
+                            <strong id="previewEmail"></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Name -->
+            <div class="form-group">
+                <label for="name">
+                    <i class="fas fa-gamepad"></i> Player Display Name
+                    <span class="required">*</span>
+                </label>
+                <input type="text" class="form-control" id="name" name="name" 
+                       placeholder="Enter player name" required>
+                <small class="form-text">This name will be displayed in game transactions</small>
+            </div>
+
+            <!-- Initial Balance -->
+            <div class="form-group">
+                <label for="balance">
+                    <i class="fas fa-wallet"></i> Initial Balance (₹)
+                </label>
+                <input type="number" class="form-control" id="balance" name="balance" 
+                       step="0.01" min="0" value="0" placeholder="0.00">
+                <small class="form-text">Default: ₹0.00 (You can update this later)</small>
+            </div>
+
+            <!-- Balance Preview -->
+            <div class="balance-preview">
+                <div class="preview-header">
+                    <i class="fas fa-calculator"></i>
+                    <strong>Initial Wallet Balance</strong>
+                </div>
+                <div class="balance-amount" id="balancePreview">
+                    ₹0.00
+                </div>
+            </div>
+
+            {% if not users %}
+            <!-- No Users Available -->
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-users-slash"></i>
+                </div>
+                <h3>No Users Available</h3>
+                <p>All active users already have player accounts, or there are no active users.</p>
+                <div class="empty-actions">
+                    <a href="{% url 'manage_users' %}" class="btn-action info">
+                        <i class="fas fa-users-cog"></i> Manage Users
+                    </a>
+                    <a href="{% url 'admin_home' %}" class="btn-action primary">
+                        <i class="fas fa-home"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'admin_home' %}" class="btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                {% if users %}
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Create Player Account
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Card -->
+    <div class="help-card">
+        <div class="help-header">
+            <i class="fas fa-question-circle"></i>
+            <h3>Need Help?</h3>
+        </div>
+        <div class="help-content">
+            <div class="help-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Step 1:</strong> Select a registered user from the dropdown
+                </div>
+            </div>
+            <div class="help-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Step 2:</strong> Enter a display name for the player
+                </div>
+            </div>
+            <div class="help-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Step 3:</strong> Set initial balance (optional)
+                </div>
+            </div>
+            <div class="help-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Step 4:</strong> Click "Create Player Account"
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.form-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 25px 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: white;
+}
+
+.header-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.form-header h2 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.form-header p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.player-form {
+    padding: 30px;
+}
+
+.info-alert {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+    border-left: 4px solid #667eea;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.alert-icon {
+    color: #667eea;
+    font-size: 24px;
+}
+
+.alert-content strong {
+    display: block;
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 15px;
+}
+
+.alert-content p {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.required {
+    color: #ff4757;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+    font-family: 'Inter', sans-serif;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #999;
+}
+
+.user-preview {
+    margin-bottom: 25px;
+}
+
+.preview-card {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border: 2px solid #667eea;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.preview-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+.preview-details {
+    flex: 1;
+}
+
+.preview-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.preview-row:last-child {
+    margin-bottom: 0;
+}
+
+.preview-label {
+    color: #666;
+    font-size: 13px;
+}
+
+.preview-row strong {
+    color: #333;
+    font-size: 14px;
+}
+
+.balance-preview {
+    background: linear-gradient(135deg, #f8f9fa, #fff);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #667eea;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.balance-amount {
+    font-size: 36px;
+    font-weight: 700;
+    color: #28a745;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 36px;
+    color: #999;
+}
+
+.empty-state h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.empty-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-action {
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    font-size: 14px;
+}
+
+.btn-action.info {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+}
+
+.btn-action.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #e9ecef;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #e9ecef;
+    color: #666;
+}
+
+.btn-secondary:hover {
+    background: #dee2e6;
+}
+
+.help-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    padding: 25px;
+}
+
+.help-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.help-header i {
+    font-size: 24px;
+}
+
+.help-header h3 {
+    font-size: 18px;
+    color: #333;
+}
+
+.help-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.help-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.help-item i {
+    color: #28a745;
+    font-size: 18px;
+    margin-top: 2px;
+}
+
+.help-item strong {
+    color: #667eea;
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .empty-actions {
+        flex-direction: column;
+    }
+
+    .btn-action {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+function updatePlayerName() {
+    const select = document.getElementById('user_id');
+    const selectedOption = select.options[select.selectedIndex];
+    const username = selectedOption.getAttribute('data-username');
+    const email = selectedOption.getAttribute('data-email');
+    
+    if (username) {
+        // Auto-fill player name with username
+        document.getElementById('name').value = username;
+        
+        // Show user preview
+        document.getElementById('previewUsername').textContent = username;
+        document.getElementById('previewEmail').textContent = email;
+        document.getElementById('userPreview').style.display = 'block';
+    } else {
+        document.getElementById('name').value = '';
+        document.getElementById('userPreview').style.display = 'none';
+    }
+}
+
+// Update balance preview
+document.getElementById('balance').addEventListener('input', function() {
+    const balance = parseFloat(this.value) || 0;
+    document.getElementById('balancePreview').textContent = `₹${balance.toFixed(2)}`;
+});
+</script>
+{% endblock %}
